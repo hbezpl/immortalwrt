@@ -1,1 +1,130 @@
+  #!/bin/bash
+#
+# Copyright (c) 2019-2020 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+# https://github.com/P3TERX/Actions-OpenWrt
+# File name: diy-part2.sh
+# Description: OpenWrt DIY script part 2 (After Update feeds)
+#
 
+# 修改IP(C类地址)和主机名
+sed -i 's/192.168.6.1/192.168.66.254/g' package/base-files/files/bin/config_generate
+#sed -i 's/255.255.255.0/255.255.0.0/g' package/base-files/files/bin/config_generate
+
+# 修改登录密码ezxykj
+#sed -i '/root::0:0:99999:7:::/s/^/#/' package/lean/default-settings/files/zzz-default-settings
+#sed -i '/root:::0:99999:7:::/s/^/#/' package/lean/default-settings/files/zzz-default-settings
+sed -i 's/root:::0:99999:7:::/root:$1$iZM.01X5$xfeRwcqbhN\/60\/2SUPwDc\/:0:0:99999:7:::/g' package/base-files/files/etc/shadow
+
+# 修改默认主题
+#sed -i '/luci.main.mediaurlbase/s/^/#/' feeds/luci/themes/luci-theme-argon/root/etc/uci-defaults/30_luci-theme-argon
+#sed -i '/luci.main.mediaurlbase/s/^/#/' feeds/luci/themes/luci-theme-bootstrap/root/etc/uci-defaults/30_luci-theme-bootstrap
+#sed -i '/luci.main.mediaurlbase/s/^/#/' feeds/luci/themes/luci-theme-material/root/etc/uci-defaults/30_luci-theme-material
+#sed -i '/luci.main.mediaurlbase/s/^/#/' feeds/luci/themes/luci-theme-openwrt/root/etc/uci-defaults/30_luci-theme-openwrt
+#sed -i '/luci.main.mediaurlbase/s/^/#/' feeds/luci/themes/luci-theme-openwrt-2020/root/etc/uci-defaults/30_luci-theme-openwrt-2020
+#sed -i 's/Bootstrap Theme (default)/Bootstrap Theme/g' feeds/luci/themes/luci-theme-bootstrap/Makefile
+sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci-light/Makefile
+
+# 更改IP后TTYD不能访问以及外网访问
+#sed -i '/${interface:+-i $interface}/s/^/#/' feeds/packages/utils/ttyd/files/ttyd.init               //此屏蔽与IPV6有冲突
+#sed -i '/@lan/d' feeds/packages/utils/ttyd/files/ttyd.config
+#sed -i "$ a\ \toption ipv6 '1'" feeds/packages/utils/ttyd/files/ttyd.config
+
+#修改iptv
+sed -i 's/${vendorid:+-V "$vendorid"}/${vendorid:+-V "" "-x 0x3c:$vendorid"}/g' package/network/config/netifd/files/lib/netifd/proto/dhcp.sh
+
+# 更换golang版本
+rm -rf feeds/packages/lang/golang
+mv files/diy/golang feeds/packages/lang
+
+# 更换docker版本
+rm -rf feeds/packages/utils/runc
+mv files/diy/docker/runc feeds/packages/utils/
+rm -rf feeds/packages/utils/containerd
+mv files/diy/docker/containerd feeds/packages/utils/
+rm -rf feeds/packages/utils/docker-compose
+mv files/diy/docker/docker-compose feeds/packages/utils/
+rm -rf feeds/packages/utils/docker
+mv files/diy/docker/docker feeds/packages/utils/
+rm -rf feeds/packages/utils/dockerd
+mv files/diy/docker/dockerd feeds/packages/utils/
+rm -rf feeds/luci/applications/luci-app-docker
+mv files/diy/docker/luci-app-docker feeds/luci/applications/
+rm -rf feeds/luci/applications/luci-app-dockerman
+mv files/diy/docker/luci-app-dockerman feeds/luci/applications/
+
+chmod +x feeds/packages/utils/dockerd/git-short-commit.sh
+
+# 修改frp版本
+rm -rf feeds/packages/net/frp
+mv files/diy/frp/frp feeds/packages/net/
+rm -rf feeds/luci/applications/luci-app-frpc
+mv files/diy/frp/luci-app-frpc feeds/luci/applications/
+rm -rf feeds/luci/applications/luci-app-frps
+mv files/diy/frp/luci-app-frps feeds/luci/applications/ 
+
+# 修改unblockneteasemusic
+rm -rf feeds/luci/applications/luci-app-unblockneteasemusic
+git clone https://github.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic.git package/luci-app-unblockneteasemusic
+sed -i 's/+node//g' package/luci-app-unblockneteasemusic/Makefile
+
+#打包unblockneteasemusic的core核心
+NAME=$"package/luci-app-unblockneteasemusic/root/usr/share/unblockneteasemusic" && mkdir -p $NAME/core
+echo "$(curl -s 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits?sha=enhanced&path=precompiled' | jq -r '.[0].sha')" > "$NAME/core_local_ver"
+curl -L https://github.com/UnblockNeteaseMusic/server/raw/enhanced/precompiled/app.js -o $NAME/core/app.js
+curl -L https://github.com/UnblockNeteaseMusic/server/raw/enhanced/precompiled/bridge.js -o $NAME/core/bridge.js
+mv files/diy/unm/ca.crt $NAME/core/ca.crt
+mv files/diy/unm/server.crt $NAME/core/server.crt
+mv files/diy/unm/server.key $NAME/core/server.key
+#curl -L https://github.com/UnblockNeteaseMusic/server/raw/enhanced/ca.crt -o $NAME/core/ca.crt
+#curl -L https://github.com/UnblockNeteaseMusic/server/raw/enhanced/server.crt -o $NAME/core/server.crt
+#curl -L https://github.com/UnblockNeteaseMusic/server/raw/enhanced/server.key -o $NAME/core/server.key
+
+# lucky
+git clone  https://github.com/gdy666/luci-app-lucky.git package/lucky
+
+# 添加cmcc-rax3000m-256m
+sed -i '/^TARGET_DEVICES += cmcc_rax3000m-nand-mtk$/a\
+\
+define Device/cmcc_rax3000m-nand-mtk-256m\
+  DEVICE_VENDOR := CMCC\
+  DEVICE_MODEL := RAX3000M NAND\
+  DEVICE_VARIANT := (MTK 256m layout)\
+  DEVICE_DTS := mt7981b-cmcc-rax3000m-nand-mtk-256m\
+  DEVICE_DTS_DIR := ../dts\
+  DEVICE_PACKAGES := kmod-usb3 f2fsck mkf2fs\
+  BLOCKSIZE := 128k\
+  PAGESIZE := 2048\
+  IMAGE_SIZE := 240128k\
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata\
+endef\
+TARGET_DEVICES += cmcc_rax3000m-nand-mtk-256m
+' target/linux/mediatek/image/filogic.mk
+mv files/diy/dts/mt7981b-cmcc-rax3000m-nand-mtk-256m.dts target/linux/mediatek/dts/
+sed -i 's/compatible = "cmcc,rax3000m-nand", "mediatek,mt7981"/compatible = "cmcc,rax3000m-nand-mtk", "cmcc,rax3000m-nand", "mediatek,mt7981"/g' target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand-mtk.dts
+sed -i 's/compatible = "cmcc,rax3000m-emmc", "mediatek,mt7981"/compatible = "cmcc,rax3000m-emmc-mtk", "cmcc,rax3000m-emmc", "mediatek,mt7981"/g' target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-emmc-mtk.dts
+
+# 添加openclash
+rm -rf package/feeds/luci/luci-app-openclash
+rm -rf feeds/luci/applications/luci-app-openclash
+mkdir package/openclash
+cd package/openclash
+git init
+git remote add origin https://github.com/vernesong/OpenClash.git
+git config core.sparsecheckout true
+echo "luci-app-openclash" >> .git/info/sparse-checkout
+git pull --depth 1 origin master
+git branch --set-upstream-to=origin/master master
+mv luci-app-openclash ../
+cd ../../
+rm -rf package/openclash
+
+#添加上网时间控制
+git clone https://github.com/gaobin89/luci-app-timecontrol package/luci-app-timecontrol
+#sed -i '/$(eval $(call BuildPackage,$(PKG_NAME)))/s/^/#/' package/luci-app-timecontrol/luci-app-timecontrol/Makefile
+#sed -i 's/download-ci-llvm=true/download-ci-llvm=false/' feeds/packages/lang/rust/Makefile
+
+rm -rf files/diy
