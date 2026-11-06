@@ -36,36 +36,6 @@ sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci-l
 #修改iptv
 #sed -i 's/${vendorid:+-V "$vendorid"}/${vendorid:+-V "" "-x 0x3c:$vendorid"}/g' package/network/config/netifd/files/lib/netifd/proto/dhcp.sh
 
-# 更换golang版本
-rm -rf feeds/packages/lang/golang
-mv files/diy/golang feeds/packages/lang
-
-# 更换docker版本
-rm -rf feeds/packages/utils/runc
-mv files/diy/docker/runc feeds/packages/utils/
-rm -rf feeds/packages/utils/containerd
-mv files/diy/docker/containerd feeds/packages/utils/
-rm -rf feeds/packages/utils/docker-compose
-mv files/diy/docker/docker-compose feeds/packages/utils/
-rm -rf feeds/packages/utils/docker
-mv files/diy/docker/docker feeds/packages/utils/
-rm -rf feeds/packages/utils/dockerd
-mv files/diy/docker/dockerd feeds/packages/utils/
-rm -rf feeds/luci/applications/luci-app-docker
-mv files/diy/docker/luci-app-docker feeds/luci/applications/
-rm -rf feeds/luci/applications/luci-app-dockerman
-mv files/diy/docker/luci-app-dockerman feeds/luci/applications/
-
-chmod +x feeds/packages/utils/dockerd/git-short-commit.sh
-
-# 修改frp版本
-rm -rf feeds/packages/net/frp
-mv files/diy/frp/frp feeds/packages/net/
-rm -rf feeds/luci/applications/luci-app-frpc
-mv files/diy/frp/luci-app-frpc feeds/luci/applications/
-rm -rf feeds/luci/applications/luci-app-frps
-mv files/diy/frp/luci-app-frps feeds/luci/applications/ 
-
 # 修改unblockneteasemusic
 rm -rf feeds/luci/applications/luci-app-unblockneteasemusic
 git clone https://github.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic.git package/luci-app-unblockneteasemusic
