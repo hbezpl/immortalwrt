@@ -36,65 +36,10 @@ sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci-l
 #修改iptv
 #sed -i 's/${vendorid:+-V "$vendorid"}/${vendorid:+-V "" "-x 0x3c:$vendorid"}/g' package/network/config/netifd/files/lib/netifd/proto/dhcp.sh
 
-# 修改unblockneteasemusic
-rm -rf feeds/luci/applications/luci-app-unblockneteasemusic
-git clone https://github.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic.git package/luci-app-unblockneteasemusic
-sed -i 's/+node//g' package/luci-app-unblockneteasemusic/Makefile
-
-#打包unblockneteasemusic的core核心
-NAME=$"package/luci-app-unblockneteasemusic/root/usr/share/unblockneteasemusic" && mkdir -p $NAME/core
-echo "$(curl -s 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits?sha=enhanced&path=precompiled' | jq -r '.[0].sha')" > "$NAME/core_local_ver"
-curl -L https://github.com/UnblockNeteaseMusic/server/raw/enhanced/precompiled/app.js -o $NAME/core/app.js
-curl -L https://github.com/UnblockNeteaseMusic/server/raw/enhanced/precompiled/bridge.js -o $NAME/core/bridge.js
-mv files/diy/unm/ca.crt $NAME/core/ca.crt
-mv files/diy/unm/server.crt $NAME/core/server.crt
-mv files/diy/unm/server.key $NAME/core/server.key
-#curl -L https://github.com/UnblockNeteaseMusic/server/raw/enhanced/ca.crt -o $NAME/core/ca.crt
-#curl -L https://github.com/UnblockNeteaseMusic/server/raw/enhanced/server.crt -o $NAME/core/server.crt
-#curl -L https://github.com/UnblockNeteaseMusic/server/raw/enhanced/server.key -o $NAME/core/server.key
-
 # lucky
 git clone  https://github.com/gdy666/luci-app-lucky.git package/lucky
-
-# 添加cmcc-rax3000m-256m
-sed -i '/^TARGET_DEVICES += cmcc_rax3000m-nand-mtk$/a\
-\
-define Device/cmcc_rax3000m-nand-mtk-256m\
-  DEVICE_VENDOR := CMCC\
-  DEVICE_MODEL := RAX3000M NAND\
-  DEVICE_VARIANT := (MTK 256m layout)\
-  DEVICE_DTS := mt7981b-cmcc-rax3000m-nand-mtk-256m\
-  DEVICE_DTS_DIR := ../dts\
-  DEVICE_PACKAGES := kmod-usb3 f2fsck mkf2fs\
-  BLOCKSIZE := 128k\
-  PAGESIZE := 2048\
-  IMAGE_SIZE := 240128k\
-  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata\
-endef\
-TARGET_DEVICES += cmcc_rax3000m-nand-mtk-256m
-' target/linux/mediatek/image/filogic.mk
-mv files/diy/dts/mt7981b-cmcc-rax3000m-nand-mtk-256m.dts target/linux/mediatek/dts/
-sed -i 's/compatible = "cmcc,rax3000m-nand", "mediatek,mt7981"/compatible = "cmcc,rax3000m-nand-mtk", "cmcc,rax3000m-nand", "mediatek,mt7981"/g' target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand-mtk.dts
-sed -i 's/compatible = "cmcc,rax3000m-emmc", "mediatek,mt7981"/compatible = "cmcc,rax3000m-emmc-mtk", "cmcc,rax3000m-emmc", "mediatek,mt7981"/g' target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-emmc-mtk.dts
-
-# 添加openclash
-rm -rf package/feeds/luci/luci-app-openclash
-rm -rf feeds/luci/applications/luci-app-openclash
-mkdir package/openclash
-cd package/openclash
-git init
-git remote add origin https://github.com/vernesong/OpenClash.git
-git config core.sparsecheckout true
-echo "luci-app-openclash" >> .git/info/sparse-checkout
-git pull --depth 1 origin master
-git branch --set-upstream-to=origin/master master
-mv luci-app-openclash ../
-cd ../../
-rm -rf package/openclash
 
 #添加上网时间控制
 git clone https://github.com/gaobin89/luci-app-timecontrol package/luci-app-timecontrol
 #sed -i '/$(eval $(call BuildPackage,$(PKG_NAME)))/s/^/#/' package/luci-app-timecontrol/luci-app-timecontrol/Makefile
 #sed -i 's/download-ci-llvm=true/download-ci-llvm=false/' feeds/packages/lang/rust/Makefile
-
-rm -rf files/diy
