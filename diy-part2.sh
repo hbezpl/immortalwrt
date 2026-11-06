@@ -33,9 +33,6 @@ sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci-l
 #sed -i '/@lan/d' feeds/packages/utils/ttyd/files/ttyd.config
 #sed -i "$ a\ \toption ipv6 '1'" feeds/packages/utils/ttyd/files/ttyd.config
 
-#修改iptv
-#sed -i 's/${vendorid:+-V "$vendorid"}/${vendorid:+-V "" "-x 0x3c:$vendorid"}/g' package/network/config/netifd/files/lib/netifd/proto/dhcp.sh
-
 # lucky
 git clone  https://github.com/gdy666/luci-app-lucky.git package/lucky
 
